@@ -109,11 +109,25 @@ u32 hidKeysHeld(void);
 u32 hidKeysDown(void);
 
 /**
-* @brief Returns a bitmask of newly released buttons, this frame.
+ * @brief Returns a bitmask of newly released buttons, this frame.
  * Individual buttons can be extracted using binary AND.
  * @return 32-bit bitmask of newly released buttons.
  */
 u32 hidKeysUp(void);
+
+/**
+ * @brief Sets the key repeat parameters for @ref hidKeysRepeat.
+ * @param delay Initial delay.
+ * @param interval Repeat interval.
+ */
+void hidSetRepeatParameters(u32 delay, u32 interval);
+
+/**
+ * @brief Returns a bitmask of buttons helf for a certain amount of frames, see @ref hidSetRepeatParameters.
+ * Individual buttons can be extracted using binary AND.
+ * @return 32-bit bitmask of newly released buttons.
+ */
+u32 hidKeysRepeat(void);
 
 /**
  * @brief Reads the current touch position.

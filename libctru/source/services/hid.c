@@ -21,7 +21,8 @@ Handle hidEvents[5];
 
 vu32* hidSharedMem;
 
-static u32 kOld, kHeld, kDown, kUp;
+static u32 kRepeatDelay = 30, kRepeatInterval = 15, kRepeatCount = 30;
+static u32 kOld, kHeld, kDown, kUp, kRepeat;
 static touchPosition tPos;
 static circlePosition cPos;
 static accelVector aVec;
@@ -86,7 +87,8 @@ void hidExit(void)
 	if (AtomicDecrement(&hidRefCount)) return;
 
 	// Reset internal state.
-	kOld = kHeld = kDown = kUp = 0;
+	kOld = kHeld = kDown = kUp = kRepeat = 0;
+	kRepeatCount = kRepeatDelay;
 
 	// Unmap HID sharedmem and close handles.
 	int i; for(i=0; i<5; i++)svcCloseHandle(hidEvents[i]);
@@ -195,6 +197,21 @@ void hidScanInput(void)
 	kDown = (~kOld) & kHeld;
 	kUp = kOld & (~kHeld);
 
+	if (kRepeatDelay != 0)
+	{
+		if (kHeld != kOld)
+		{
+			kRepeatCount = kRepeatDelay;
+			kRepeat = kDown;
+		}
+
+		if (--kRepeatCount == 0)
+		{
+			kRepeatCount = kRepeatInterval;
+			kRepeat = kHeld;
+		}
+	}
+
 	Id = hidSharedMem[66 + 4];//Accelerometer
 	if(Id>7)Id=7;
 	if(hidCheckSectionUpdateTime(&hidSharedMem[66], Id)==0)
@@ -223,6 +240,19 @@ u32 hidKeysDown(void)
 u32 hidKeysUp(void)
 {
 	return kUp;
+}
+
+void hidSetRepeatParameters(u32 delay, u32 interval)
+{
+	kRepeatDelay = delay;
+	kRepeatInterval = interval;
+	kRepeatCount = kRepeatDelay;
+	kRepeat = 0;
+}
+
+u32 hidKeysRepeat(void)
+{
+	return kRepeat;
 }
 
 void hidTouchRead(touchPosition* pos)
